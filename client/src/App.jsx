@@ -1,35 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import axios from "axios";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null); // for preview after S3 upload
+  const [uploadStatus, setUploadStatus] = useState("");
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    setUploadStatus("");
+    setPreview(null); // Clear previous preview
+  };
+  
+  const handleUpload = async () => {
+    if (!file) return alert("Please select a file");
+
+    try {
+      // Step 1: Get presigned PUT URL
+      const { data } = await axios.post("http://localhost:7777/upload", {
+        fileName: file.name,
+        fileType: file.type,
+      });
+
+      const { fileUrl, key } = data;
+
+      // Step 2: Upload file to S3
+      await axios.put(fileUrl, file, {
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      setUploadStatus("Uploaded successfully!");
+
+      // Step 3: Get presigned GET URL to display uploaded image
+      const getRes = await axios.get(`http://localhost:7777/${key}`
+      );
+
+      setPreview(getRes.data.fileUrl); // Set S3 image preview
+      console.log("hiiiiiiiiiiiiiiiiiiiiiiiiiiiii",getRes.data.fileUrl)
+
+      console.log("File uploaded and preview URL fetched:", getRes.data.fileUrl);
+    } catch (error) {
+      console.error("Upload error:", error.message);
+      setUploadStatus("Upload failed!");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="upload-container" style={{ padding: 20 }}>
+      <h2>Upload Image to S3</h2>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <br />
+      <button onClick={handleUpload} style={{ marginTop: 10 }}>
+        Upload
+      </button>
+      <p>{uploadStatus}</p>
 
-export default App
+      {preview && (
+        <div style={{ marginTop: 20 }}>
+          <h4>Uploaded Image:</h4>
+          <img src={preview} alt="Uploaded" style={{ width: 250 }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;
+
+
