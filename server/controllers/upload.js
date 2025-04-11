@@ -75,3 +75,26 @@ exports.deleteFile = async (req, res) => {
     return res.status(500).json({ suucess: "false", message: err.message });
   }
 };
+
+
+
+// GET all uploaded image metadata
+// exports.getFile = async (req, res) => {
+//     try {
+//       const files = await File.find({});
+//       const fileUrls = await Promise.all(
+//         files.map(async (file) => {
+//           const url = await getFile(file.key); // You must have this helper
+//           return {
+//             key: file.key,
+//             url,
+//           };
+//         })
+//       );
+//       res.status(201).json({success:true,fileUrls});
+//     } catch (err) {
+//       console.error("Error fetching files:", err.message);
+//       res.status(500).json({ error: "Could not fetch files" });
+//     }
+//   };
+  
