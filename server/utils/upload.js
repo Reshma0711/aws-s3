@@ -39,3 +39,17 @@ exports.deleteFile = async (key) => {
   return result; // important!
   
 };
+
+
+exports.downloadFile=async(key) =>{
+
+    const command = new GetObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: key,
+      });
+
+    const data = await s3.send(command);
+
+    return data;
+
+}

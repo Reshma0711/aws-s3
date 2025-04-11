@@ -1,4 +1,9 @@
-const { getFile, uploadFile, deleteFile } = require("../utils/upload");
+const {
+  getFile,
+  uploadFile,
+  deleteFile,
+  downloadFile,
+} = require("../utils/upload");
 const File = require("../model/upload"); // your Mongoose model
 
 exports.uploadFile = async (req, res) => {
@@ -76,7 +81,36 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
+exports.downloadFile = async (req, res) => {
+  try {
+    const { key } = req.params;
 
+    if (!key) {
+      return res.status(400).json({ message: "File key is required" });
+    }
+
+    const data = await downloadFile(key);
+
+    res.setHeader(
+        "Content-Type",
+        data.ContentType || "application/octet-stream"
+      );
+      res.setHeader("Content-Disposition", `attachment; filename="${key}"`);
+  
+
+    // Pipe the file stream to the response
+    data.Body.pipe(res).on("error", (err) => {
+      console.error("Stream error:", err);
+      res.status(500).json({ message: "Error streaming file" });
+    });
+  } catch (err) {
+    console.log("errorrrrrrrrr", err.message);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 // GET all uploaded image metadata
 // exports.getFile = async (req, res) => {
@@ -97,4 +131,3 @@ exports.deleteFile = async (req, res) => {
 //       res.status(500).json({ error: "Could not fetch files" });
 //     }
 //   };
-  
